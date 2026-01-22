@@ -89,7 +89,7 @@
 
 
 
-const express = require('express');
+/* const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('./middleware/cors'); // Custom CORS
 const helmet = require('helmet');
@@ -101,10 +101,10 @@ const clickRoutes = require('./routes/clicks');
 const app = express();
 
 // 1. Security headers
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" },
-  crossOriginEmbedderPolicy: false
-}));
+// app.use(helmet({
+//   crossOriginResourcePolicy: { policy: "cross-origin" },
+//   crossOriginEmbedderPolicy: false
+// }));
 
 // 2. CORS - Must be before routes
 app.use(cors);
@@ -181,4 +181,30 @@ app.listen(PORT, () => {
   console.log(`🔗 Health check: http://localhost:${PORT}/health`);
 });
 
-module.exports = app;
+module.exports = app; */
+
+
+
+
+
+const express = require('express');
+const cors = require('cors');
+require('dotenv').config();
+const clickRoutes = require('./routes/clicks');
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+app.get('/health', (req, res) => {
+  res.json({ status: 'OK', node: process.version });
+});
+
+app.use('/api/clicks', clickRoutes);
+
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on ${PORT}, Node: ${process.version}`);
+});
