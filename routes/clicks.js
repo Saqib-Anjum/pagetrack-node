@@ -1,6 +1,3 @@
-
-const express = require('express');
-const router = express.Router();
 const Click = require('../models/Click');
 const ipLocation = require('../utils/ipLocation');
 
@@ -19,7 +16,7 @@ const ipLocation = require('../utils/ipLocation');
 // };
 
 // Track a click
-router.post('/track', async (req, res) => {
+exports.trackClick = async (req, res) => {
   try {
     const { button, page, referrer, userAgent, sessionId, metadata } = req.body;
     
@@ -70,10 +67,10 @@ router.post('/track', async (req, res) => {
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
-});
+};
 
 // Get all clicks (with pagination and filtering)
-router.get('/', async (req, res) => {
+exports.getAllClicks = async (req, res) => {
   try {
     const { 
       page = 1, 
@@ -132,124 +129,124 @@ router.get('/', async (req, res) => {
       message: 'Failed to fetch clicks'
     });
   }
-});
+};
 
 // Get click statistics
-router.get('/stats', async (req, res) => {
-  try {
-    const { startDate, endDate } = req.query;
+// router.get('/stats', async (req, res) => {
+//   try {
+//     const { startDate, endDate } = req.query;
     
-    const filter = {};
-    if (startDate || endDate) {
-      filter.timestamp = {};
-      if (startDate) filter.timestamp.$gte = new Date(startDate);
-      if (endDate) filter.timestamp.$lte = new Date(endDate);
-    }
+//     const filter = {};
+//     if (startDate || endDate) {
+//       filter.timestamp = {};
+//       if (startDate) filter.timestamp.$gte = new Date(startDate);
+//       if (endDate) filter.timestamp.$lte = new Date(endDate);
+//     }
     
-    // Aggregate statistics
-    const stats = await Click.aggregate([
-      { $match: filter },
-      {
-        $group: {
-          _id: null,
-          totalClicks: { $sum: 1 },
-          uniqueIPs: { $addToSet: "$ip" },
-          buttons: { $addToSet: "$button" }
-        }
-      },
-      {
-        $project: {
-          totalClicks: 1,
-          uniqueIPs: { $size: "$uniqueIPs" },
-          uniqueButtons: { $size: "$buttons" }
-        }
-      }
-    ]);
+//     // Aggregate statistics
+//     const stats = await Click.aggregate([
+//       { $match: filter },
+//       {
+//         $group: {
+//           _id: null,
+//           totalClicks: { $sum: 1 },
+//           uniqueIPs: { $addToSet: "$ip" },
+//           buttons: { $addToSet: "$button" }
+//         }
+//       },
+//       {
+//         $project: {
+//           totalClicks: 1,
+//           uniqueIPs: { $size: "$uniqueIPs" },
+//           uniqueButtons: { $size: "$buttons" }
+//         }
+//       }
+//     ]);
     
-    // Get top buttons
-    const topButtons = await Click.aggregate([
-      { $match: filter },
-      { $group: { _id: "$button", count: { $sum: 1 } } },
-      { $sort: { count: -1 } },
-      { $limit: 10 }
-    ]);
+//     // Get top buttons
+//     const topButtons = await Click.aggregate([
+//       { $match: filter },
+//       { $group: { _id: "$button", count: { $sum: 1 } } },
+//       { $sort: { count: -1 } },
+//       { $limit: 10 }
+//     ]);
     
-    // Get top countries
-    const topCountries = await Click.aggregate([
-      { $match: { ...filter, country: { $ne: "Unknown" } } },
-      { $group: { _id: "$country", count: { $sum: 1 } } },
-      { $sort: { count: -1 } },
-      { $limit: 10 }
-    ]);
+//     // Get top countries
+//     const topCountries = await Click.aggregate([
+//       { $match: { ...filter, country: { $ne: "Unknown" } } },
+//       { $group: { _id: "$country", count: { $sum: 1 } } },
+//       { $sort: { count: -1 } },
+//       { $limit: 10 }
+//     ]);
     
-    res.json({
-      success: true,
-      data: {
-        summary: stats[0] || { totalClicks: 0, uniqueIPs: 0, uniqueButtons: 0 },
-        topButtons,
-        topCountries
-      }
-    });
+//     res.json({
+//       success: true,
+//       data: {
+//         summary: stats[0] || { totalClicks: 0, uniqueIPs: 0, uniqueButtons: 0 },
+//         topButtons,
+//         topCountries
+//       }
+//     });
     
-  } catch (error) {
-    console.error('Error fetching stats:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch statistics'
-    });
-  }
-});
+//   } catch (error) {
+//     console.error('Error fetching stats:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to fetch statistics'
+//     });
+//   }
+// });
 
-// Get click by ID
-router.get('/:id', async (req, res) => {
-  try {
-    const click = await Click.findById(req.params.id).select('-__v');
+// // Get click by ID
+// router.get('/:id', async (req, res) => {
+//   try {
+//     const click = await Click.findById(req.params.id).select('-__v');
     
-    if (!click) {
-      return res.status(404).json({
-        success: false,
-        message: 'Click not found'
-      });
-    }
+//     if (!click) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'Click not found'
+//       });
+//     }
     
-    res.json({
-      success: true,
-      data: click
-    });
+//     res.json({
+//       success: true,
+//       data: click
+//     });
     
-  } catch (error) {
-    console.error('Error fetching click:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch click'
-    });
-  }
-});
+//   } catch (error) {
+//     console.error('Error fetching click:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to fetch click'
+//     });
+//   }
+// });
 
-// Delete click by ID
-router.delete('/:id', async (req, res) => {
-  try {
-    const click = await Click.findByIdAndDelete(req.params.id);
+// // Delete click by ID
+// router.delete('/:id', async (req, res) => {
+//   try {
+//     const click = await Click.findByIdAndDelete(req.params.id);
     
-    if (!click) {
-      return res.status(404).json({
-        success: false,
-        message: 'Click not found'
-      });
-    }
+//     if (!click) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'Click not found'
+//       });
+//     }
     
-    res.json({
-      success: true,
-      message: 'Click deleted successfully'
-    });
+//     res.json({
+//       success: true,
+//       message: 'Click deleted successfully'
+//     });
     
-  } catch (error) {
-    console.error('Error deleting click:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to delete click'
-    });
-  }
-});
+//   } catch (error) {
+//     console.error('Error deleting click:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to delete click'
+//     });
+//   }
+// });
 
-module.exports = router;
+// module.exports = router;

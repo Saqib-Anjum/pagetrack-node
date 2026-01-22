@@ -190,7 +190,7 @@ module.exports = app; */
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
-const clickRoutes = require('./routes/clicks');
+const { trackClick, getAllClicks } = require('./routes/clicks');
 
 const app = express();
 
@@ -201,7 +201,8 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', node: process.version });
 });
 
-app.use('/api/clicks', clickRoutes);
+app.get('/api/clicks', getAllClicks);
+app.post('/api/clicks', trackClick);
 
 
 const PORT = process.env.PORT || 5000;
